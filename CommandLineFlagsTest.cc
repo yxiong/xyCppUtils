@@ -41,5 +41,6 @@ int main(int argc, char** argv)  {
     LOG(INFO) << argv[i];
   }
 
+  LOG(INFO) << "Passed.";
   return 0;
 }
