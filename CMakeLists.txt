@@ -8,10 +8,31 @@
 cmake_minimum_required (VERSION 3.0)
 project (xyCppUtils CXX)
 
-# Compile the library.
+# Find external libraries.
+set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package (Boost REQUIRED COMPONENTS serialization)
+find_package (Eigen3 REQUIRED)
+find_package (JPEG REQUIRED)
+find_package (PNG REQUIRED)
+
+# Include directories for external libraries.
+include_directories (${Boost_INCLUDE_DIRS})
+include_directories (${EIGEN3_INCLUDE_DIR})
+include_directories (${JPEG_INCLUDE_DIR})
+include_directories (${PNG_INCLUDE_DIRS})
+
+# Configure file.
+configure_file (
+  "${PROJECT_SOURCE_DIR}/xyUtilsConfig.h.in"
+  "${PROJECT_SOURCE_DIR}/xyUtilsConfig.h")
+
+# Compile the target library.
 set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-set (XY_SOURCES CommandLineFlags.cc FileIO.cc LogAndCheck.cc PlyIO.cc
+
+set (XY_SOURCES Camera.cc CommandLineFlags.cc EigenUtils.cc FileIO.cc
+  LogAndCheck.cc NonlinearLeastSquares.cc NumericalCheck.cc PlyIO.cc
   StringConvert.cc StringUtils.cc)
+
 add_library (xyutils ${XY_SOURCES})
 
 ################################################################
@@ -33,15 +54,18 @@ add_library (xyutils ${XY_SOURCES})
 enable_testing ()
 
 # Define tests.
-set (XY_GENERAL_TESTS CommandLineFlagsTest QuaternionTest StringUtilsTest
-  StringConvertTest TimerTest)
+set (XY_GENERAL_TESTS CommandLineFlagsTest NonlinearLeastSquaresTest
+  NumericalCheckTest QuaternionTest StringUtilsTest StringConvertTest TimerTest)
 set (XY_FAILURE_TESTS LogAndCheckTest)
-set (XY_DATA_TESTS FileIOTest PlyIOTest)
+set (XY_DATA_TESTS EigenUtilsTest FileIOTest ImageTest ImageUtilsTest PlyIOTest)
 
 # Compile and link tests.
 foreach (test ${XY_GENERAL_TESTS} ${XY_FAILURE_TESTS} ${XY_DATA_TESTS})
   add_executable (${test} ${test}.cc)
   target_link_libraries(${test} xyutils)
+  target_link_libraries(${test} ${Boost_LIBRARIES})
+  target_link_libraries(${test} ${JPEG_LIBRARIES})
+  target_link_libraries(${test} ${PNG_LIBRARIES})
 endforeach ()
 
 # Run tests.

@@ -1,0 +1,11 @@
+/**
+ * Configure header file.
+ *
+ * Author: Ying Xiong.
+ * Created: Dec 03, 2014.
+ */
+
+#define __USE_LIB_BOOST__ 1
+#define __USE_LIB_EIGEN__ 1
+#define __USE_LIB_JPEG__ 1
+#define __USE_LIB_PNG__ 1
