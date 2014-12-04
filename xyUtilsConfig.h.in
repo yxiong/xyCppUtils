@@ -5,7 +5,18 @@
  * Created: Dec 03, 2014.
  */
 
-#define __USE_LIB_BOOST__ 1
-#define __USE_LIB_EIGEN__ 1
-#define __USE_LIB_JPEG__ 1
-#define __USE_LIB_PNG__ 1
+#cmakedefine01 USE_Boost
+#define __USE_LIB_BOOST__ USE_Boost
+#undef USE_Boost
+
+#cmakedefine01 USE_Eigen3
+#define __USE_LIB_EIGEN__ USE_Eigen3
+#undef USE_Eigen3
+
+#cmakedefine01 USE_JPEG
+#define __USE_LIB_JPEG__ USE_JPEG
+#undef USE_JPEG
+
+#cmakedefine01 USE_PNG
+#define __USE_LIB_PNG__ USE_PNG
+#undef USE_PNG
