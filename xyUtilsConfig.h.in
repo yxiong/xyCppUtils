@@ -5,14 +5,20 @@
  * Created: Dec 03, 2014.
  */
 
-#cmakedefine01 USE_Boost
-#define __USE_LIB_BOOST__ USE_Boost
+#cmakedefine01 USE_BOOST
+#define __USE_LIB_BOOST__ USE_BOOST
 
-#cmakedefine01 USE_Eigen3
-#define __USE_LIB_EIGEN__ USE_Eigen3
+#cmakedefine01 USE_EIGEN
+#define __USE_LIB_EIGEN__ USE_EIGEN
 
 #cmakedefine01 USE_JPEG
 #define __USE_LIB_JPEG__ USE_JPEG
 
 #cmakedefine01 USE_PNG
 #define __USE_LIB_PNG__ USE_PNG
+
+#cmakedefine01 USE_OPENGL
+#define __USE_LIB_OPENGL__ USE_OPENGL
+
+#cmakedefine01 USE_SDL
+#define __USE_LIB_SDL__ USE_SDL
