@@ -75,21 +75,27 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/xyUtilsConfig.h.in"
   "${PROJECT_SOURCE_DIR}/xyUtilsConfig.h")
 
+# MACRO: xy_check_depend(depend_ok [depend1 depend2 ...])
+# Check `USE_depend1`, `USE_depend2`, ..., and if all passed, set `depend_ok` to
+# 1, otherwise to 0.
+macro (xy_check_depend depend_ok)
+  set (${depend_ok} 1)
+  foreach (depend ${ARGN})
+    if (NOT USE_${depend})
+      set (${depend_ok} 0)
+    endif ()
+  endforeach ()
+endmacro ()
+
 ################################################################
 # Compile the target library.
 ################################################################
 set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 # MACRO: xy_add_source (source_list source [depend1 depend2 ...])
-# Check `USE_depend1`, `USE_depend2`, ..., and if all passed, add `source` to
-# `source_list`.
+# Add `source` to `source_list` if the dependency check passed.
 macro (xy_add_source source_list source)
-  set (xy_add_source_depend_ok 1)
-  foreach (depend ${ARGN})
-    if (NOT USE_${depend})
-      set (xy_add_source_depend_ok 0)
-    endif ()
-  endforeach ()
+  xy_check_depend (xy_add_source_depend_ok ${ARGN})
   if (xy_add_source_depend_ok)
     list (APPEND ${source_list} ${source})
   endif ()
@@ -113,6 +119,45 @@ xy_add_source (XY_SOURCES StringUtils.cc)
 add_library (xyutils ${XY_SOURCES})
 
 ################################################################
+# Compile the binary executables.
+################################################################
+
+# MACRO: xy_add_executable (executable [depend1 depend2])
+# Add `executable` with dependency check and proper library linking.
+macro (xy_add_executable executable)
+  xy_check_depend (xy_add_executable_depend_ok ${ARGN})
+  if (xy_add_executable_depend_ok)
+    add_executable (${executable} ${executable}.cc)
+    # Link to libraries.
+    # Note that we currently link all the enabled library to the executable
+    # target. This is because the `depend` arguments are critical libraries
+    # without which the executable will not build. Optional libraries, if
+    # enabled, should also be linked against the executable target.
+    target_link_libraries(${executable} xyutils)
+    if (USE_BOOST)
+      target_link_libraries(${executable} ${Boost_LIBRARIES})
+    endif ()
+    if (USE_JPEG)
+      target_link_libraries(${executable} ${JPEG_LIBRARIES})
+    endif ()
+    if (USE_PNG)
+      target_link_libraries(${executable} ${PNG_LIBRARIES})
+    endif ()
+    if (USE_OPENGL)
+      target_link_libraries(${executable} ${OPENGL_LIBRARIES})
+    endif ()
+    if (USE_SDL)
+      target_link_libraries(${executable} ${SDL_LIBRARY})
+      if (APPLE)
+        add_dependencies(${executable} SDLMain)
+        target_link_libraries(${executable} ${PROJECT_BINARY_DIR}/libSDLMain.a)
+      endif ()
+    endif ()
+  endif ()
+endmacro ()
+xy_add_executable (visualize_points_and_cameras EIGEN OPENGL SDL)
+
+################################################################
 # Compile and run tests.
 ################################################################
 enable_testing ()
@@ -133,45 +178,15 @@ enable_testing ()
 #       (return 0) and print a "Passed." message on command line.
 macro (xy_add_test test_name test_type)
   # Check dependency.
-  set (xy_add_test_depend_ok 1)
-  foreach (depend ${ARGN})
-    if (NOT USE_${depend})
-      set (xy_add_test_depend_ok 0)
-    endif ()
-  endforeach ()
+  xy_check_depend (xy_add_test_depend_ok ${ARGN})
   if (xy_add_test_depend_ok)
     # Compile test binary.
-    add_executable (${test_name} ${test_name}.cc)
-    # Link to libraries.
-    # Note that we currently link all the enabled library to the test
-    # target. This is because the `depend` arguments are critical libraries
-    # without which the test will not build. Optional libraries, if enabled,
-    # should also be linked against test target.
-    target_link_libraries(${test_name} xyutils)
-    if (USE_BOOST)
-      target_link_libraries(${test_name} ${Boost_LIBRARIES})
-    endif ()
-    if (USE_JPEG)
-      target_link_libraries(${test_name} ${JPEG_LIBRARIES})
-    endif ()
-    if (USE_PNG)
-      target_link_libraries(${test_name} ${PNG_LIBRARIES})
-    endif ()
-    if (USE_OPENGL)
-      target_link_libraries(${test_name} ${OPENGL_LIBRARIES})
-    endif ()
-    if (USE_SDL)
-      target_link_libraries(${test_name} ${SDL_LIBRARY})
-      if (APPLE)
-        add_dependencies(${test_name} SDLMain)
-        target_link_libraries(${test_name} ${PROJECT_BINARY_DIR}/libSDLMain.a)
-      endif ()
-    endif ()
+    xy_add_executable (${test_name} ${ARGN})
     # Run test.
     if (${test_type} MATCHES general)
       add_test (${test_name} ./${test_name})
       set_tests_properties (${test_name}
-        PROPERTIES WILL_FAIL true FAIL_REGULAR_EXPRESSION "Passed.")
+        PROPERTIES PASS_REGULAR_EXPRESSION "Passed.")
     elseif (${test_type} MATCHES fail)
       add_test (${test_name} ./${test_name})
       set_tests_properties (${test_name}
@@ -180,9 +195,22 @@ macro (xy_add_test test_name test_type)
       add_test (${test_name} ./${test_name}
         --test_data_dir=${PROJECT_SOURCE_DIR}/TestData)
       set_tests_properties (${test_name}
-        PROPERTIES WILL_FAIL true FAIL_REGULAR_EXPRESSION "Passed.")
+        PROPERTIES PASS_REGULAR_EXPRESSION "Passed.")
     endif ()
   endif (xy_add_test_depend_ok)
+endmacro ()
+
+# MACRO: xy_add_test_script (script_name script_type [depend1 depend2 ...])
+macro (xy_add_test_script script_name script_type)
+  xy_check_depend (xy_add_test_script_depend_ok ${ARGN})
+  if (xy_add_test_script_depend_ok)
+    # Run test script.
+    set (script_exe ${PROJECT_SOURCE_DIR}/${script_name})
+    add_test (${script_name} ${script_exe}
+      ${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR}/TestData)
+    set_tests_properties (${script_name}
+      PROPERTIES PASS_REGULAR_EXPRESSION "Passed.")
+  endif (xy_add_test_script_depend_ok)
 endmacro ()
 
 # Define tests.
@@ -200,3 +228,6 @@ xy_add_test (QuaternionTest general)
 xy_add_test (StringConvertTest general)
 xy_add_test (StringUtilsTest general)
 xy_add_test (TimerTest general)
+
+xy_add_test_script (CommandLineFlagsTest.sh data)
+xy_add_test_script (visualize_points_and_cameras_test.sh data EIGEN OPENGL SDL)
