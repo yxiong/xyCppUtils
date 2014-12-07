@@ -5,8 +5,6 @@
 # Created: Dec 06, 2014.
 ################################################################
 
-include_directories (${PROJECT_SOURCE_DIR})
-
 # MACRO: xy_add_source (source_list source [depend1 depend2 ...])
 # Add `source` to `source_list` if the dependency check passed.
 macro (xy_add_source source_list source)

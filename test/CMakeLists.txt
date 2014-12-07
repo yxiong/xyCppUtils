@@ -5,9 +5,7 @@
 # Created: Dec 06, 2014.
 ################################################################
 
-include_directories (${PROJECT_SOURCE_DIR})
-
-set (XY_TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/TestData)
+set (XY_TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
 # MACRO: xy_add_test (test_name test_type [depend1 depend2 ...])
 # Check `USE_depend1`, `USE_depend2`, ..., and if all passed, add `test_name`
