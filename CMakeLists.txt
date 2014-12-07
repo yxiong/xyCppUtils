@@ -101,7 +101,7 @@ macro (xy_add_executable executable)
     # target. This is because the `depend` arguments are critical libraries
     # without which the executable will not build. Optional libraries, if
     # enabled, should also be linked against the executable target.
-    target_link_libraries(${executable} xyutils)
+    target_link_libraries(${executable} xyCppUtils)
     if (USE_BOOST)
       target_link_libraries(${executable} ${Boost_LIBRARIES})
     endif ()

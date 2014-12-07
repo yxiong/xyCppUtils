@@ -7,8 +7,8 @@ Author: Ying Xiong.
 Created: Aug 09, 2012.
 
 
-Compile and run
----------------
+Compile and install
+-------------------
 
     cd /path/to/xyCppUtils
     mkdir cmake-build
@@ -16,3 +16,4 @@ Compile and run
     cmake ..
     make
     make test  # optional
+    [sudo] make install
