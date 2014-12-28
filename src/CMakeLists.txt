@@ -30,9 +30,10 @@ xy_add_source (XY_SOURCES StringConvert.cc)
 xy_add_source (XY_SOURCES StringUtils.cc)
 
 # Add library.
-add_library (xyCppUtils ${XY_SOURCES})
+add_library (xyCppUtils SHARED ${XY_SOURCES})
 set_target_properties (xyCppUtils PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+xy_link_libraries (xyCppUtils)
 
 # Add binary executable.
 xy_add_executable (visualize_points_and_cameras EIGEN OPENGL SDL)

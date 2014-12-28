@@ -35,32 +35,32 @@ find_package (SDL)
 CMAKE_DEPENDENT_OPTION(USE_SDL "Use SDL." ON SDL_FOUND OFF)
 
 # Include directories for external libraries.
-if (${USE_BOOST})
+if (USE_BOOST)
   include_directories (${Boost_INCLUDE_DIRS})
 endif ()
 
-if (${USE_EIGEN})
+if (USE_EIGEN)
   include_directories (${EIGEN3_INCLUDE_DIR})
 endif ()
 
-if (${USE_JPEG})
+if (USE_JPEG)
   include_directories (${JPEG_INCLUDE_DIR})
 endif ()
 
-if (${USE_PNG})
+if (USE_PNG)
   include_directories (${PNG_INCLUDE_DIRS})
 endif ()
 
-if (${USE_OPENGL})
+if (USE_OPENGL)
   include_directories (${OPENG_LINCLUDE_DIR})
 endif ()
 
-if (${USE_SDL})
+if (USE_SDL)
   include_directories (${SDL_INCLUDE_DIR})
 endif ()
 
 # In Mac OS X, we need to compile SDLMain library with objective C compiler.
-if (${USE_SDL} AND ${APPLE})
+if (USE_SDL AND APPLE)
   set (SDLMAIN_DIR ${PROJECT_SOURCE_DIR}/ThirdParty/SDLMain)
   add_custom_target (SDLMain ALL
     /usr/bin/gcc -g -O2 -W -Wall -Wextra -I${SDL_INCLUDE_DIR} -I${SDLMAIN_DIR} -c -o SDLMain.o ${SDLMAIN_DIR}/SDLMain.m
@@ -90,6 +90,31 @@ endmacro ()
 
 set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
+# MACRO: xy_link_libraries (target)
+# Link the `target` with all enabled libraries.
+macro (xy_link_libraries target)
+  if (USE_BOOST)
+    target_link_libraries(${target} ${Boost_LIBRARIES})
+  endif ()
+  if (USE_JPEG)
+    target_link_libraries(${target} ${JPEG_LIBRARIES})
+  endif ()
+  if (USE_PNG)
+    target_link_libraries(${target} ${PNG_LIBRARIES})
+  endif ()
+  if (USE_OPENGL)
+    target_link_libraries(${target} ${OPENGL_LIBRARIES})
+  endif ()
+  if (USE_SDL)
+    target_link_libraries(${target} ${SDL_LIBRARY})
+    if (APPLE)
+      add_dependencies(${target} SDLMain)
+      target_link_libraries(${target}
+        ${PROJECT_BINARY_DIR}/lib/libSDLMain.a)
+    endif ()
+  endif ()
+endmacro()
+
 # MACRO: xy_add_executable (executable [depend1 depend2])
 # Add `executable` with dependency check and proper library linking.
 macro (xy_add_executable executable)
@@ -97,31 +122,8 @@ macro (xy_add_executable executable)
   if (xy_add_executable_depend_ok)
     add_executable (${executable} ${executable}.cc)
     # Link to libraries.
-    # Note that we currently link all the enabled library to the executable
-    # target. This is because the `depend` arguments are critical libraries
-    # without which the executable will not build. Optional libraries, if
-    # enabled, should also be linked against the executable target.
     target_link_libraries(${executable} xyCppUtils)
-    if (USE_BOOST)
-      target_link_libraries(${executable} ${Boost_LIBRARIES})
-    endif ()
-    if (USE_JPEG)
-      target_link_libraries(${executable} ${JPEG_LIBRARIES})
-    endif ()
-    if (USE_PNG)
-      target_link_libraries(${executable} ${PNG_LIBRARIES})
-    endif ()
-    if (USE_OPENGL)
-      target_link_libraries(${executable} ${OPENGL_LIBRARIES})
-    endif ()
-    if (USE_SDL)
-      target_link_libraries(${executable} ${SDL_LIBRARY})
-      if (APPLE)
-        add_dependencies(${executable} SDLMain)
-        target_link_libraries(${executable}
-          ${PROJECT_BINARY_DIR}/lib/libSDLMain.a)
-      endif ()
-    endif ()
+    xy_link_libraries(${executable})
   endif ()
 endmacro ()
 
