@@ -343,7 +343,9 @@ void Image<T>::ReadRGBPngData(const png_bytep* png_data, int bit_depth) {
 template<typename T>
 void Image<T>::LoadFromPngFile(const char* filename) {
   FILE* fp = fopen(filename, "rb");
-  CHECK(fp);
+  if (!fp) {
+    LOG(FATAL) << "File not found: '" << filename << "'.";
+  }
   png_structp png_ptr = NULL;
   png_infop info_ptr = NULL;
   int success = SetupPngStructs(fp, &png_ptr, &info_ptr);
