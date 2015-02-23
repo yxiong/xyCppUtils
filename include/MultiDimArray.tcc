@@ -199,130 +199,46 @@ namespace multi_dim_array_details {
 
 // We use template functor class here because C++ does not allow template
 // partial instantiation for functions.
-template <typename T, int N, typename OP>
-class ApplyToAll {
- public:
-  void operator()(const int* dims, OP op,
-                  T* lData, int lIndex, const int* lStrides,
-                  const T* rData, int rIndex, const int* rStrides) {
-    ApplyToAll<T,N-1,OP> nextHelper;
+template <typename T, int N>
+struct ApplyToAll {
+  template <typename OP>
+  void operator()(const int* dims, T* lData, int lIndex, const int* lStrides,
+                  const T* rData, int rIndex, const int* rStrides, OP op) {
+    ApplyToAll<T,N-1> nextHelper;
     for (int i = 0; i < dims[0]; ++i) {
-      nextHelper(dims+1, op, lData, lIndex + lStrides[0]*i, lStrides+1,
-                 rData, rIndex + rStrides[0]*i, rStrides+1);
+      nextHelper(dims+1, lData, lIndex + lStrides[0]*i, lStrides+1,
+                 rData, rIndex + rStrides[0]*i, rStrides+1, op);
     }
   }
 };
 
-template <typename T, typename OP>
-class ApplyToAll<T,0,OP> {
- public:
-  void operator()(const int* dims, OP(op),
-                  T* lData, int lIndex, const int* lStrides,
-                  const T* rData, int rIndex, const int* rStrides) {
+template <typename T>
+struct ApplyToAll<T,0> {
+  template <typename OP>
+  void operator()(const int* dims, T* lData, int lIndex, const int* lStrides,
+                  const T* rData, int rIndex, const int* rStrides, OP op) {
     op(lData+lIndex, rData+rIndex);
   }
 };
 
-// We use functor class instead of inline function because the former is more
-// likely to be inlined.
-template <typename T>
-class AssignmentOperator {
- public:
-  void operator()(T* lData, const T* rData) {
-    *lData = *rData;
-  }
-};
-
-template <typename T>
-class AddEqualOperator {
- public:
-  void operator()(T* lData, const T* rData) {
-    *lData += *rData;
-  }
-};
-
-template <typename T>
-class SubtractEqualOperator {
- public:
-  void operator()(T* lData, const T* rData) {
-    *lData -= *rData;
-  }
-};
-
-template <typename T>
-class MultiplyEqualOperator {
- public:
-  void operator()(T* lData, const T* rData) {
-    *lData *= *rData;
-  }
-};
-
-template <typename T>
-class DivideEqualOperator {
- public:
-  void operator()(T* lData, const T* rData) {
-    *lData /= *rData;
-  }
-};
-
-template <typename T, int N, typename OP>
-class ApplyScalarToAll {
- public:
-  void operator()(const int* dims, OP op,
-                  T* lData, int lIndex, const int* lStrides, T scalar) {
-    ApplyScalarToAll<T,N-1,OP> nextHelper;
+template <typename T, int N>
+struct ApplyScalarToAll {
+  template <typename OP>
+  void operator()(const int* dims, T* lData, int lIndex, const int* lStrides,
+                  T scalar, OP op) {
+    ApplyScalarToAll<T,N-1> nextHelper;
     for (int i = 0; i < dims[0]; ++i) {
-      nextHelper(dims+1, op, lData, lIndex+lStrides[0]*i, lStrides+1, scalar);
+      nextHelper(dims+1, lData, lIndex+lStrides[0]*i, lStrides+1, scalar, op);
     }
   }
 };
 
-template <typename T, typename OP>
-class ApplyScalarToAll<T,0,OP> {
- public:
-  void operator()(const int* dims, OP op,
-                  T* lData, int lIndex, const int* lStrides, T scalar) {
+template <typename T>
+struct ApplyScalarToAll<T,0> {
+  template <typename OP>
+  void operator()(const int* dims, T* lData, int lIndex, const int* lStrides,
+                  T scalar, OP op) {
     op(lData+lIndex, scalar);
-  }
-};
-
-template <typename T>
-class ScalarAssignOperator {
- public:
-  void operator()(T* lData, T scalar) {
-    *lData = scalar;
-  }
-};
-
-template <typename T>
-class ScalarAddEqualOperator {
- public:
-  void operator()(T* lData, T scalar) {
-    *lData += scalar;
-  }
-};
-
-template <typename T>
-class ScalarSubtractEqualOperator {
- public:
-  void operator()(T* lData, T scalar) {
-    *lData -= scalar;
-  }
-};
-
-template <typename T>
-class ScalarMultiplyEqualOperator {
- public:
-  void operator()(T* lData, T scalar) {
-    *lData *= scalar;
-  }
-};
-
-template <typename T>
-class ScalarDivideEqualOperator {
- public:
-  void operator()(T* lData, T scalar) {
-    *lData /= scalar;
   }
 };
 
@@ -338,77 +254,72 @@ MultiDimArray<T,N> MultiDimArray<T,N>::DeepCopy() {
 
 template <typename T, int N>
 void MultiDimArray<T,N>::AssignData(const MultiDimArray<T,N>& that) {
-  typedef multi_dim_array_details::AssignmentOperator<T> OP;
-  multi_dim_array_details::ApplyToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_,
-      that.data_, that.firstIndex_, that.strides_);
+  multi_dim_array_details::ApplyToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_,
+      that.data_, that.firstIndex_, that.strides_,
+      [](T* l, const T* r) { *l =  *r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator+=(const MultiDimArray<T,N>& that) {
-  typedef multi_dim_array_details::AddEqualOperator<T> OP;
-  multi_dim_array_details::ApplyToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_,
-      that.data_, that.firstIndex_, that.strides_);
+  multi_dim_array_details::ApplyToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_,
+      that.data_, that.firstIndex_, that.strides_,
+      [](T* l, const T* r) { *l += *r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator-=(const MultiDimArray<T,N>& that) {
-  typedef multi_dim_array_details::SubtractEqualOperator<T> OP;
-  multi_dim_array_details::ApplyToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_,
-      that.data_, that.firstIndex_, that.strides_);
+  multi_dim_array_details::ApplyToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_,
+      that.data_, that.firstIndex_, that.strides_,
+      [](T* l, const T* r) { *l -= *r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator*=(const MultiDimArray<T,N>& that) {
-  typedef multi_dim_array_details::MultiplyEqualOperator<T> OP;
-  multi_dim_array_details::ApplyToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_,
-      that.data_, that.firstIndex_, that.strides_);
+  multi_dim_array_details::ApplyToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_,
+      that.data_, that.firstIndex_, that.strides_,
+      [](T* l, const T* r) { *l *= *r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator/=(const MultiDimArray<T,N>& that) {
-  typedef multi_dim_array_details::DivideEqualOperator<T> OP;
-  multi_dim_array_details::ApplyToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_,
-      that.data_, that.firstIndex_, that.strides_);
+  multi_dim_array_details::ApplyToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_,
+      that.data_, that.firstIndex_, that.strides_,
+      [](T* l, const T* r) { *l /= *r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::AssignData(T scalar) {
-  typedef multi_dim_array_details::ScalarAssignOperator<T> OP;
-  multi_dim_array_details::ApplyScalarToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_, scalar);
+  multi_dim_array_details::ApplyScalarToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_, scalar, [](T* l, T r) { *l = r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator+=(T scalar) {
-  typedef multi_dim_array_details::ScalarAddEqualOperator<T> OP;
-  multi_dim_array_details::ApplyScalarToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_, scalar);
+  multi_dim_array_details::ApplyScalarToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_, scalar, [](T* l, T r) { *l += r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator-=(T scalar) {
-  typedef multi_dim_array_details::ScalarSubtractEqualOperator<T> OP;
-  multi_dim_array_details::ApplyScalarToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_, scalar);
+  multi_dim_array_details::ApplyScalarToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_, scalar, [](T* l, T r) { *l -= r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator*=(T scalar) {
-  typedef multi_dim_array_details::ScalarMultiplyEqualOperator<T> OP;
-  multi_dim_array_details::ApplyScalarToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_, scalar);
+  multi_dim_array_details::ApplyScalarToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_, scalar, [](T* l, T r) { *l *= r; });
 }
 
 template <typename T, int N>
 void MultiDimArray<T,N>::operator/=(T scalar) {
-  typedef multi_dim_array_details::ScalarDivideEqualOperator<T> OP;
-  multi_dim_array_details::ApplyScalarToAll<T,N,OP>()(
-      dims_, OP(), data_, firstIndex_, strides_, scalar);
+  multi_dim_array_details::ApplyScalarToAll<T,N>()(
+      dims_, data_, firstIndex_, strides_, scalar, [](T* l, T r) { *l /= r; });
 }
 
 }   // namespace xyUtils
