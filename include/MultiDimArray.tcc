@@ -171,8 +171,8 @@ MultiDimArray<T,N-1> MultiDimArray<T,N>::SliceDim(int dim, int index) const {
 }
 
 template <typename T, int N>
-MultiDimArray<T,N> MultiDimArray<T,N>::SliceDim(int dim,
-                                                const Range& range) const {
+MultiDimArray<T,N> MultiDimArray<T,N>::SliceDim(
+    int dim, const Range<int>& range) const {
   int dims[N], strides[N];
   for (int i = 0; i < N; ++i) {
     if (i == dim) {

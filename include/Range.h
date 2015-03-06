@@ -8,26 +8,40 @@
 #ifndef __XYUTILS_RANGE_H__
 #define __XYUTILS_RANGE_H__
 
+#include <cmath>
+#include <type_traits>
+
 namespace xyUtils  {
-// A range of integers from `start` (inclusive) to `end` (exclusive) with a
+// A range of integers from `start` (inclusive) to `stop` (exclusive) with a
 // given `step`.
+template <typename T=int>
 class Range {
  public:
-  Range(int start, int end, int step = 1)
-      : start_(start), end_(end), step_(step) { }
-  int start() const { return start_; }
-  int end() const { return end_; }
-  int step() const { return step_; }
+  Range(T start, T stop, T step = 1)
+      : start_(start), stop_(stop), step_(step) { }
+  T start() const { return start_; }
+  T stop() const { return stop_; }
+  T step() const { return step_; }
   // The number of elements in the range.
   int size() const {
-    if (step_ > 0) {
-      return (end_ - start_ - 1) / step_ + 1;
-    } else {
-      return (start_ - end_ - 1) / (-step_) + 1;
-    }
+    return size_(std::is_integral<T>());
   }
  private:
-  int start_, end_, step_;
+  // Compute size for integral type `T`.
+  int size_(std::true_type) const {
+    if (step_ > 0) {
+      return (stop_ - start_ - 1) / step_ + 1;
+    } else {
+      return (start_ - stop_ - 1) / (-step_) + 1;
+    }
+  }
+  // Compute size for floating point type `T`.
+  int size_(std::false_type) const {
+    static_assert(std::is_floating_point<T>(),
+                  "Range: 'T' has to be integral or floating point type.");
+    return ceil((stop_ - start_) / step_);
+  }
+  T start_, stop_, step_;
 };
 }   // namespace xyUtils
 

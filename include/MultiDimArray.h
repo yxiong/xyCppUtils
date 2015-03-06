@@ -67,7 +67,7 @@ class MultiDimArray {
   // constness", in the sense that returned object will be able to modify the
   // data content of current object.
   MultiDimArray<T,N-1> SliceDim(int dim, int index) const;
-  MultiDimArray<T,N> SliceDim(int dim, const Range& range) const;
+  MultiDimArray<T,N> SliceDim(int dim, const Range<int>& range) const;
   // Assign the data of current array from a given array.
   void AssignData(const MultiDimArray<T,N>& that);
   // Assign all the data to the same scalar.

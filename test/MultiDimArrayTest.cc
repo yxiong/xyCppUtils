@@ -56,11 +56,11 @@ void SliceTest() {
   CHECK_EQ(mda1(0,3,1,4), mda3(0,1));
 
   // Slice dimension by range.
-  Range r(2,4);
+  Range<int> r(2,4);
   MultiDimArray<int,4> mda4 = mda1.SliceDim(1, r);  // 3x2x2x6.
   CHECK_EQ(mda4.GetDim(1), 2);
   CHECK_EQ(mda1(0,3,1,4), mda4(0,1,1,4));
-  r = Range(4, -1, -2);
+  r = Range<int>(4, -1, -2);
   mda4 = mda1.SliceDim(3, r);  // 3x5x3x6.
   CHECK_EQ(mda4.GetDim(3), 3);
   CHECK_EQ(mda1(0,3,1,4), mda4(0,3,1,0));
