@@ -12,8 +12,19 @@
 #include <type_traits>
 
 namespace xyUtils  {
-// A range of integers from `start` (inclusive) to `stop` (exclusive) with a
-// given `step`.
+// A range of numbers from `start` (inclusive) to `stop` (exclusive) with a
+// given `step`. More specifically, the numbers in the range are
+//     [start, start+step, start+2*step, ..., start+(size-1)*step]
+// where
+//     start + step * (size-1) < stop       if step > 0
+//     start + step * (size-1) > stop       if step < 0
+//
+// The numbers in the range can be floating point, but note the rounding effect
+// when doing so. The suggested way is to pad an `epsilon` at the `stop`:
+//     Range(1.5, 1.8001, 0.3)   // 1.8 will be included.
+//     Range(1.5, 1.7999, 0.3)   // 1.5 will be excluded.
+//     Range(1.5, 1.8, 0.3)      // 1.8 should be excluded, but might not be
+//                               // because of rounding effect. Avoid this.
 template <typename T=int>
 class Range {
  public:
