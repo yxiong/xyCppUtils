@@ -8,6 +8,15 @@
 cmake_minimum_required (VERSION 3.0)
 project (xyCppUtils CXX)
 
+# Default confiurations.
+
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE "RELEASE" CACHE STRING
+    "Set default build type to RELEASE." FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+
+set (BUILD_SHARED_LIBS "ON" CACHE BOOL "Build shared library by default.")
+
 ################################################################
 # Find and configure external libraries.
 ################################################################

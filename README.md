@@ -13,7 +13,7 @@ Compile and install
     cd /path/to/xyCppUtils
     mkdir cmake-build
     cd cmake-build
-    cmake [-DCMAKE_BUILD_TYPE=RELEASE] ..
+    cmake ..
     make
     make test  # optional
     [sudo] make install

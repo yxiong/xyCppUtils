@@ -34,9 +34,9 @@ class Range {
   T stop() const { return stop_; }
   T step() const { return step_; }
   // The number of elements in the range.
-  int size() const {
-    return size_(std::is_integral<T>());
-  }
+  int size() const { return size_(std::is_integral<T>()); }
+  // Get `i`-th element in the range (zero-based).
+  T operator[](int i) const { return start_ + step_ * i; }
  private:
   // Compute size for integral type `T`.
   int size_(std::true_type) const {

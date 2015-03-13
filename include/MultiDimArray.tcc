@@ -9,7 +9,7 @@
 #ifndef __XYUTILS_MULTI_DIM_ARRAY_TCC__
 #define __XYUTILS_MULTI_DIM_ARRAY_TCC__
 
-#include <stack>
+#include <cmath>
 
 namespace xyUtils {
 
@@ -320,6 +320,181 @@ template <typename T, int N>
 void MultiDimArray<T,N>::operator/=(T scalar) {
   multi_dim_array_details::ApplyScalarToAll<T,N>()(
       dims_, data_, firstIndex_, strides_, scalar, [](T* l, T r) { *l /= r; });
+}
+
+// ================================================================
+// Find minimum/maximum elemnt.
+// ================================================================
+namespace multi_dim_array_details {
+
+template <typename T, int N, template<typename,int,bool> class V, bool IgnoreNan>
+struct MinMaxHelper {
+  void operator()(const MultiDimArray<T,N>& mda, V<T,N,IgnoreNan>* v) {
+    MinMaxHelper<T,N-1,V,IgnoreNan> nextHelper;
+    for (int i = 0; i < mda.GetDim(0); ++i) {
+      V<T,N-1,IgnoreNan> v2(v->value);
+      nextHelper(mda.SliceDim(0, i), &v2);
+      v->update(i, v2);
+    }
+  }
+};
+
+template <typename T, template<typename,int,bool> class V, bool IgnoreNan>
+struct MinMaxHelper<T, 1, V, IgnoreNan> {
+  void operator()(const MultiDimArray<T,1>& mda, V<T,1,IgnoreNan>* v) {
+    for (int i = 0; i < mda.GetDim(0); ++i) {
+      v->update(i, V<T,0,IgnoreNan>(mda(i)));
+    }
+  }
+};
+
+template <typename T, int N, bool IgnoreNan> struct MinV;
+template <typename T, int N, bool IgnoreNan> struct MaxV;
+
+// Ignore nan version.
+template <typename T, int N>
+struct MinV<T,N,true> {
+  MinV(T v) : value(v) { }
+  void update (int i, const MinV<T,N-1,true>& v2) {
+    if ((std::isnan(value) && !std::isnan(v2.value)) || v2.value < value) {
+      value = v2.value;
+    }
+  }
+  T value;
+};
+template <typename T, int N>
+struct MaxV<T,N,true> {
+  MaxV(T v) : value(v) { }
+  void update (int i, const MaxV<T,N-1,true>& v2) {
+    if ((std::isnan(value) && !std::isnan(v2.value)) || v2.value > value) {
+      value = v2.value;
+    }
+  }
+  T value;
+};
+
+// Considering nan version.
+template <typename T, int N>
+struct MinV<T,N,false> {
+  MinV(T v) : value(v) { }
+  void update (int i, const MinV<T,N-1,false>& v2) {
+    if (std::isnan(v2.value) || v2.value < value) {
+      value = v2.value;
+    }
+  }
+  T value;
+};
+
+template <typename T, int N>
+struct MaxV<T,N,false> {
+  MaxV(T v) : value(v) { }
+  void update (int i, const MaxV<T,N-1,false>& v2) {
+    if (std::isnan(v2.value) || v2.value > value) {
+      value = v2.value;
+    }
+  }
+  T value;
+};
+
+template <typename T, int N, bool IgnoreNan> struct ArgMinV;
+template <typename T, int N, bool IgnoreNan> struct ArgMaxV;
+
+// Ignore nan version.
+template <typename T, int N>
+struct ArgMinV<T,N,true> {
+  ArgMinV(T v) : value(v) { }
+  void update(int i, const ArgMinV<T,N-1,true>& v2) {
+    if ((std::isnan(value) && !std::isnan(v2.value)) || v2.value < value) {
+      value = v2.value;
+      index[0] = i;
+      for (int j = 1; j < N; ++j) { index[j] = v2.index[j-1]; }
+    }
+  }
+  T value;
+  std::array<int,N> index;
+};
+template <typename T, int N>
+struct ArgMaxV<T,N,true> {
+  ArgMaxV(T v) : value(v) { }
+  void update(int i, const ArgMaxV<T,N-1,true>& v2) {
+    if ((std::isnan(value) && !std::isnan(v2.value)) || v2.value > value) {
+      value = v2.value;
+      index[0] = i;
+      for (int j = 1; j < N; ++j) { index[j] = v2.index[j-1]; }
+    }
+  }
+  T value;
+  std::array<int,N> index;
+};
+
+// Considering nan version.
+template <typename T, int N>
+struct ArgMinV<T,N,false> {
+  ArgMinV(T v) : value(v) { }
+  void update(int i, const ArgMinV<T,N-1,false>& v2) {
+    if (std::isnan(value)) return;
+    if (std::isnan(v2.value) || v2.value < value) {
+      value = v2.value;
+      index[0] = i;
+      for (int j = 1; j < N; ++j) { index[j] = v2.index[j-1]; }
+    }
+  }
+  T value;
+  std::array<int,N> index;
+};
+template <typename T, int N>
+struct ArgMaxV<T,N,false> {
+  ArgMaxV(T v) : value(v) { }
+  void update(int i, const ArgMaxV<T,N-1,false>& v2) {
+    if (std::isnan(value)) return;
+    if (std::isnan(v2.value) || v2.value > value) {
+      value = v2.value;
+      index[0] = i;
+      for (int j = 1; j < N; ++j) { index[j] = v2.index[j-1]; }
+    }
+  }
+  T value;
+  std::array<int,N> index;
+};
+
+}   // namespace multi_dim_array_details
+
+template <typename T, int N> template <bool IgnoreNan>
+T MultiDimArray<T,N>::Min() const {
+  using namespace multi_dim_array_details;
+  MinV<T,N,IgnoreNan> v(data_[firstIndex_]);
+  MinMaxHelper<T,N,MinV,IgnoreNan>()(*this, &v);
+  return v.value;
+}
+
+template <typename T, int N> template <bool IgnoreNan>
+T MultiDimArray<T,N>::Max() const {
+  using namespace multi_dim_array_details;
+  MaxV<T,N,IgnoreNan> v(data_[firstIndex_]);
+  MinMaxHelper<T,N,MaxV,IgnoreNan>()(*this, &v);
+  return v.value;
+}
+
+template <typename T, int N> template <bool IgnoreNan>
+std::array<int,N> MultiDimArray<T,N>::ArgMin() const {
+  using namespace multi_dim_array_details;
+  ArgMinV<T,N,IgnoreNan> v(data_[firstIndex_]);
+  for (int i = 0; i < N; ++i) {
+    v.index[i] = 0;
+  }
+  MinMaxHelper<T,N,ArgMinV,IgnoreNan>()(*this, &v);
+  return v.index;
+}
+
+template <typename T, int N> template <bool IgnoreNan>
+std::array<int,N> MultiDimArray<T,N>::ArgMax() const {
+  using namespace multi_dim_array_details;
+  ArgMaxV<T,N,IgnoreNan> v(data_[firstIndex_]);
+  for (int i = 0; i < N; ++i) {
+    v.index[i] = 0;
+  }
+  MinMaxHelper<T,N,ArgMaxV,IgnoreNan>()(*this, &v);
+  return v.index;
 }
 
 }   // namespace xyUtils

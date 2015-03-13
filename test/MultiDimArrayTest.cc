@@ -10,6 +10,7 @@
 #include "LogAndCheck.h"
 #include "Timer.h"
 
+using namespace std;
 using namespace xyUtils;
 
 void IndexTest() {
@@ -106,6 +107,80 @@ void OperatorTest() {
   CHECK_EQ(mda2(0,3,1,4), 10000);
 }
 
+void MinMaxTest() {
+  int dims[3] = {6, 4, 5};
+  MultiDimArray<float,3> mda(dims);
+  // Test for Min() and ArgMin().
+  for (int i = 0; i < 6; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 5; ++k) {
+        mda(i,j,k) = (i-2)*(i-2) + (j-3)*(j-3) + k*k + 45;
+      }
+    }
+  }
+  CHECK_EQ(mda.Min(), 45);
+  array<int,3> a = mda.ArgMin();
+  CHECK_EQ(a[0], 2);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  mda(2,3,0) = nanf("");
+  mda(4,0,3) = nanf("");
+  CHECK(isnan(mda.Min()));
+  a = mda.ArgMin();
+  CHECK_EQ(a[0], 2);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  CHECK_EQ(mda.Min<true>(), 46);
+  a = mda.ArgMin<true>();
+  CHECK_EQ(a[0], 1);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  mda(0,0,0) = nanf("");
+  CHECK_EQ(mda.Min<true>(), 46);
+  a = mda.ArgMin<true>();
+  CHECK_EQ(a[0], 1);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  // Test for Max() and ArgMax().
+  for (int i = 0; i < 6; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 5; ++k) {
+        mda(i,j,k) = -(i-2)*(i-2) - (j-3)*(j-3) - k*k + 45;
+      }
+    }
+  }
+  CHECK_EQ(mda.Max(), 45);
+  a = mda.ArgMax();
+  CHECK_EQ(a[0], 2);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  mda(2,3,0) = nanf("");
+  mda(4,0,3) = nanf("");
+  CHECK(isnan(mda.Max()));
+  a = mda.ArgMax();
+  CHECK_EQ(a[0], 2);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  CHECK_EQ(mda.Max<true>(), 44);
+  a = mda.ArgMax<true>();
+  CHECK_EQ(a[0], 1);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+
+  mda(0,0,0) = nanf("");
+  CHECK_EQ(mda.Max<true>(), 44);
+  a = mda.ArgMax<true>();
+  CHECK_EQ(a[0], 1);
+  CHECK_EQ(a[1], 3);
+  CHECK_EQ(a[2], 0);
+}
+
 int main()  {
   Timer timer;
   LOG(INFO) << "Test on ...";
@@ -113,6 +188,7 @@ int main()  {
   IndexTest();
   SliceTest();
   OperatorTest();
+  MinMaxTest();
 
   LOG(INFO) << "Passed. [" << timer.elapsed() << " seconds]";
   return 0;

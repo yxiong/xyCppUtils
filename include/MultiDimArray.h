@@ -8,6 +8,7 @@
 #ifndef __XYUTILS_MULTI_DIM_ARRAY_H__
 #define __XYUTILS_MULTI_DIM_ARRAY_H__
 
+#include <array>
 #include <memory>
 
 #include "Range.h"
@@ -81,6 +82,16 @@ class MultiDimArray {
   void operator*=(T scalar);
   void operator/=(const MultiDimArray<T,N>& that);
   void operator/=(T scalar);
+  // Find the minimum/maximum element in the array.
+  // If there are ties, the `ArgMin`/`ArgMax` returns the first minimum/maximum
+  // value in the array, where "first" according to index.
+  // If the array contains `NaN`, the `IgnoreNan=true` version will ignore them
+  // and return the minimum/maximum finite value (if any), while the
+  // `IgnoreNan=false` version will return `NaN`.
+  template <bool IgnoreNan=false> T Min() const;
+  template <bool IgnoreNan=false> T Max() const;
+  template <bool IgnoreNan=false> std::array<int,N> ArgMin() const;
+  template <bool IgnoreNan=false> std::array<int,N> ArgMax() const;
 
  private:
   int dims_[N];
