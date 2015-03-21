@@ -28,6 +28,9 @@ include (CMakeDependentOption)
 find_package (Boost COMPONENTS serialization)
 CMAKE_DEPENDENT_OPTION(USE_BOOST "Use Boost." ON Boost_FOUND OFF)
 
+find_package (CUDA)
+CMAKE_DEPENDENT_OPTION(USE_CUDA "Use CUDA." ON CUDA_FOUND OFF)
+
 find_package (Eigen3)
 CMAKE_DEPENDENT_OPTION(USE_EIGEN "Use Eigen3." ON EIGEN3_FOUND OFF)
 
@@ -98,6 +101,7 @@ macro (xy_check_depend depend_ok)
 endmacro ()
 
 set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+set (CUDA_NVCC_FLAGS "-std=c++11 ${CUDA_NVCC_FLAGS}")
 
 # MACRO: xy_link_libraries (target)
 # Link the `target` with all enabled libraries.

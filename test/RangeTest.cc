@@ -1,5 +1,5 @@
 /**
-  * Description.
+  * Test on Range class.
   *
   * Author: Ying Xiong.
   * Created: Jan 26, 2015.
@@ -14,7 +14,7 @@ using namespace xyUtils;
 
 int main()  {
   Timer timer;
-  LOG(INFO) << "Test on ...";
+  LOG(INFO) << "Test on Range class...";
 
   Range<int> r(5, 7, 2);
   CHECK_EQ(r.start(), 5);

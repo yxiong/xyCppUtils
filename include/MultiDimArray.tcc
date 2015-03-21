@@ -61,6 +61,22 @@ MultiDimArray<T,N>::MultiDimArray(const int* dims, const int* strides,
   sharesOwnership_ = true;
 }
 
+template <typename T, int N>
+void MultiDimArray<T,N>::SetDims(const int* dims) {
+  numElements_ = 1;
+  for (int i = 0; i < N; ++i) {
+    dims_[i] = dims[i];
+    numElements_ *= dims[i];
+  }
+}
+
+template <typename T, int N>
+void MultiDimArray<T,N>::SetStrides(const int* strides) {
+  for (int i = 0; i < N; ++i) {
+    strides_[i] = strides[i];
+  }
+}
+
 // ================================================================
 // Indexing.
 // ================================================================

@@ -84,3 +84,7 @@ xy_add_test (TimerTest general)
 # Add test scripts.
 xy_add_test_script (CommandLineFlagsTest.sh)
 xy_add_test_script (visualize_points_and_cameras_test.sh EIGEN OPENGL SDL)
+
+if (USE_CUDA)
+  add_subdirectory (cuda)
+endif ()

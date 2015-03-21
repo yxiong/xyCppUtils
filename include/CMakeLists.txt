@@ -16,3 +16,8 @@ file (GLOB xy_tcc_files *.tcc)
 set (xy_config_file ${CMAKE_CURRENT_BINARY_DIR}/xyUtilsConfig.h)
 install (FILES ${xy_headers} ${xy_tcc_files} ${xy_config_file}
   DESTINATION include/xyCppUtils)
+
+# Add the CUDA directory.
+if (USE_CUDA)
+  add_subdirectory (cuda)
+endif ()

@@ -29,7 +29,7 @@ class MultiDimArray {
  public:
   // Create a multi-dimensional array of given dimensions and strides.
   // * If 'strides' is set to 'nullptr', the default 'C' style strides (where
-  //   the last dimension runs fastest) is provided.
+  //   the last dimension runs fastest) is assumed.
   // * An uninitialized chunk of data will be allocated, and the created object
   //   takes shared ownership of it.
   MultiDimArray(const int* dims, const int* strides=nullptr);
@@ -41,8 +41,13 @@ class MultiDimArray {
                 const std::shared_ptr<T>& sharedData, int firstIndex=0);
   // Get metadata.
   int GetDim(int n) const { return dims_[n]; }
+  const int* GetDims() const { return dims_; }
   int GetStride(int n) const { return strides_[n]; }
+  const int* GetStrides() const { return strides_; }
   int GetNumElements() const { return numElements_; }
+  // Set metadata. Note that these methods will not re-allocate the data array.
+  void SetDims(const int* dims);
+  void SetStrides(const int* strides);
   // Make a deep copy of the current object. The result object will takes
   // ownership of the newly allocated data, which will be stored compactly in
   // memory.
@@ -61,6 +66,9 @@ class MultiDimArray {
   const T& operator()(int,int,int,int) const;
   const T& operator()(int,int,int,int,int) const;
   const T& operator()(int,int,int,int,int,int) const;
+  // Get data pointer.
+  T* data() { return data_ + firstIndex_; }
+  const T* data() const { return data_ + firstIndex_; }
   // Slice a particular dimension of the array. The result array will be a
   // "view" of the original one, which means they share the same chunck of data
   // memory.

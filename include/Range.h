@@ -48,8 +48,10 @@ class Range {
   }
   // Compute size for floating point type `T`.
   int size_(std::false_type) const {
+#ifndef __CUDACC__   // CUDA compiler has some issues on the following check.
     static_assert(std::is_floating_point<T>(),
                   "Range: 'T' has to be integral or floating point type.");
+#endif
     return ceil((stop_ - start_) / step_);
   }
   T start_, stop_, step_;
