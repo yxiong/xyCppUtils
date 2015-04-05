@@ -1,6 +1,9 @@
 xyCppUtils
 ==========
 
+[<img src="https://api.travis-ci.org/yxiong/xyCppUtils.svg?branch=master"
+      alt="Build Status">](https://travis-ci.org/yxiong/xyCppUtils)
+
 Cpp utilities by Ying Xiong.
 
 Author: Ying Xiong.  

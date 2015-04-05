@@ -5,8 +5,9 @@
 # Created: Dec 01, 2014.
 ################################################################
 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 project (xyCppUtils CXX)
+enable_language (C)
 
 # Default confiurations.
 
