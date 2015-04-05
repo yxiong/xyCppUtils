@@ -8,6 +8,7 @@
 cmake_minimum_required (VERSION 2.8)
 project (xyCppUtils CXX)
 enable_language (C)
+cmake_policy (SET CMP0042 NEW)
 
 # Default confiurations.
 

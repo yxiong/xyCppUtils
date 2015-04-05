@@ -70,31 +70,39 @@ void SliceTest() {
 void OperatorTest() {
   int dims[4] = {3, 5, 2, 6};
   MultiDimArray<int,4> mda1(dims);
-  mda1(0,3,1,4) = 100;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 5; ++j) {
+      for (int k = 0; k < 2; ++k) {
+        for (int l = 0; l < 6; ++l) {
+          mda1(i,j,k,l) = i+j+k+l;
+        }
+      }
+    }
+  }
   // AssignData.
   MultiDimArray<int,4> mda2(dims);
   mda2.AssignData(mda1);
 
   // +=, -=, *=, /= another array.
-  CHECK_EQ(mda2(0,3,1,4), 100);
+  CHECK_EQ(mda2(0,3,1,4), 8);
   mda2 += mda1;
-  CHECK_EQ(mda2(0,3,1,4), 200);
+  CHECK_EQ(mda2(0,3,1,4), 16);
   mda2 -= mda1;
-  CHECK_EQ(mda2(0,3,1,4), 100);
+  CHECK_EQ(mda2(0,3,1,4), 8);
   mda2 *= mda1;
-  CHECK_EQ(mda2(0,3,1,4), 10000);
-  mda1 += 1;
+  CHECK_EQ(mda2(0,3,1,4), 64);
+  mda1 += 1;  // Avoid divide by zero.
   mda2 /= mda1;
-  CHECK_EQ(mda2(0,3,1,4), 99);
+  CHECK_EQ(mda2(0,3,1,4), 7);
 
   // +=, -=, *=, /= scalar.
   mda2 += 100;
-  CHECK_EQ(mda2(0,3,1,4), 199);
+  CHECK_EQ(mda2(0,3,1,4), 107);
   mda2 -= 99;
-  CHECK_EQ(mda2(0,3,1,4), 100);
+  CHECK_EQ(mda2(0,3,1,4), 8);
   mda2 *= 3;
-  CHECK_EQ(mda2(0,3,1,4), 300);
-  mda2 /= 100;
+  CHECK_EQ(mda2(0,3,1,4), 24);
+  mda2 /= 7;
   CHECK_EQ(mda2(0,3,1,4), 3);
   mda2.AssignData(10000);
   CHECK_EQ(mda2(0,3,1,4), 10000);
