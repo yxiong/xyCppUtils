@@ -16,6 +16,14 @@ install:
   - sudo apt-get install -qq cmake
   - sudo apt-get install -qq libboost-all-dev
 
+  # Install eigen 3.2.4 from source, because the apt-get's eigen version (3.0.X) is too old.
+  - hg clone -u 3.2.4 https://bitbucket.org/eigen/eigen/ eigen-source
+  - mkdir eigen-build
+  - cd eigen-build
+  - cmake ../eigen-source
+  - sudo make install
+  - cd ..
+
 before_script:
   - mkdir cmake-build
   - cd cmake-build
