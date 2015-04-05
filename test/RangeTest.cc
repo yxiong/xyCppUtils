@@ -32,6 +32,13 @@ int main()  {
   CHECK_EQ(r[2], 5);
   CHECK_EQ(r[4], 1);
 
+  CHECK_EQ(r.RoundToIndex(100), 0);
+  CHECK_EQ(r.RoundToValue(100), 9);
+  CHECK_EQ(r.RoundToIndex(5), 2);
+  CHECK_EQ(r.RoundToValue(5), 5);
+  CHECK_EQ(r.RoundToIndex(-1), 4);
+  CHECK_EQ(r.RoundToValue(-1), 1);
+
   Range<float> rf(0.0f, 1.5001f, 0.3f);
   CHECK_EQ(rf.start(), 0.0f);
   CHECK_EQ(rf.stop(), 1.5001f);
@@ -39,6 +46,10 @@ int main()  {
   CHECK_EQ(rf.size(), 6);
   CHECK_NEAR(rf[1], 0.3f, 0.001f);
   CHECK_NEAR(rf[3], 0.9f, 0.001f);
+
+  CHECK_EQ(rf.RoundToIndex(0.4f), 1);
+  CHECK_EQ(rf.RoundToValue(0.4f), 0.3f);
+  CHECK_EQ(rf.RoundToValue(2.4f), 1.5f);
 
   rf = Range<float>(1.5f, 0.001f, -0.3f);
   CHECK_EQ(rf.start(), 1.5f);

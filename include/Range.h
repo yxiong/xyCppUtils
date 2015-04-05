@@ -8,6 +8,7 @@
 #ifndef __XYUTILS_RANGE_H__
 #define __XYUTILS_RANGE_H__
 
+#include <algorithm>
 #include <cmath>
 #include <type_traits>
 
@@ -37,6 +38,14 @@ class Range {
   int size() const { return size_(std::is_integral<T>()); }
   // Get `i`-th element in the range (zero-based).
   T operator[](int i) const { return start_ + step_ * i; }
+  // Return the index `i` such that (*this)[i] is closest to `v`.
+  int RoundToIndex(T v) const {
+    return RoundToIndex_(v, std::is_integral<T>());
+  }
+  // Return the value in the range that is closest to `v`.
+  T RoundToValue(T v) const {
+    return (*this)[RoundToIndex(v)];
+  }
  private:
   // Compute size for integral type `T`.
   int size_(std::true_type) const {
@@ -53,6 +62,20 @@ class Range {
                   "Range: 'T' has to be integral or floating point type.");
 #endif
     return ceil((stop_ - start_) / step_);
+  }
+  // Compute `RoundToIndex` for integral type `T`.
+  int RoundToIndex_(T v, std::true_type) const {
+    int i = round(float(v - start_) / step_);
+    return std::min(size()-1, std::max(0, i));
+  }
+  // Compute `RoundToIndex` for floating point type `T`.
+  int RoundToIndex_(T v, std::false_type) const {
+#ifndef __CUDACC__   // CUDA compiler has some issues on the following check.
+    static_assert(std::is_floating_point<T>(),
+                  "Range: 'T' has to be integral or floating point type.");
+#endif
+    int i = round((v - start_) / step_);
+    return std::min(size()-1, std::max(0, i));
   }
   T start_, stop_, step_;
 };
